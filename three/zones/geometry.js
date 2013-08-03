@@ -9,8 +9,6 @@ var Geometry = exports.Geometry = function ( geometry ) {
     this._total = 0;
     this._faces = [ ];
 
-    console.log( geometry );
-
     geometry.faces.forEach( function ( face ) {
 
         if ( face instanceof THREE.Face4 )
@@ -27,8 +25,6 @@ var Geometry = exports.Geometry = function ( geometry ) {
         this._total += area;
 
     }, this );
-
-    console.log( this );
 
 };
 

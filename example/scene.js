@@ -11,7 +11,6 @@ var scene = new THREE.Scene( );
 var clock = new THREE.Clock( );
 
 var horse = new THREE.Object3D( );
-horse.add( new THREE.AxisHelper( ) );
 horse.position.x = 100;
 horse.position.z = - 40;
 horse.rotation.x = Math.PI / 2 * 3;

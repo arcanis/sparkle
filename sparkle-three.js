@@ -60,7 +60,6 @@
         var Geometry = exports.Geometry = function (geometry) {
                 this._total = 0;
                 this._faces = [];
-                console.log(geometry);
                 geometry.faces.forEach(function (face) {
                     if (face instanceof THREE.Face4)
                         throw new Error('Unsupported');
@@ -76,7 +75,6 @@
                     });
                     this._total += area;
                 }, this);
-                console.log(this);
             };
         Geometry.prototype.random = function () {
             var r = Math.random() * this._total, closest = null, diff = Number.POSITIVE_INFINITY;
