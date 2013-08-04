@@ -58,6 +58,7 @@
         exports.AccelerationAction = require('/actions/acceleration.js', module).Acceleration;
         exports.AgeingAction = require('/actions/ageing.js', module).Ageing;
         exports.DisplacementAction = require('/actions/displacement.js', module).Displacement;
+        exports.FadingAction = require('/actions/fading.js', module).Fading;
         exports.PointZone = require('/zones/point.js', module).Point;
         exports.LineZone = require('/zones/line.js', module).Line;
         exports.CuboidZone = require('/zones/cuboid.js', module).Cuboid;
@@ -276,6 +277,17 @@
             coordFactory.free(coord);
         };
     });
+    require.define('/actions/fading.js', function (module, exports, __dirname, __filename) {
+        var Fading = exports.Fading = function (fn) {
+                this._fn = fn || function (n) {
+                    return Math.sqrt(n - Math.pow(n, 2));
+                };
+            };
+        Fading.prototype.update = function (particle) {
+            var age = Math.min(particle.age, particle.lifeTime);
+            particle.opacity = this._fn(age / particle.lifeTime);
+        };
+    });
     require.define('/actions/displacement.js', function (module, exports, __dirname, __filename) {
         var Displacement = exports.Displacement = function () {
             };
@@ -343,11 +355,12 @@
         };
     });
     require.define('/initializers/lambda.js', function (module, exports, __dirname, __filename) {
-        var Lambda = exports.Lambda = function (fn) {
+        var Lambda = exports.Lambda = function (fn, context) {
                 this._fn = fn;
+                this._context = context || null;
             };
         Lambda.prototype.initialize = function (particle) {
-            this._fn.call(null, particle);
+            this._fn.call(this._context, particle);
         };
     });
     require.define('/emitter.js', function (module, exports, __dirname, __filename) {

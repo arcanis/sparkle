@@ -1,8 +1,10 @@
+attribute vec3  aColor;
 attribute float aSize;
-attribute vec4 aColor;
+attribute float aOpacity;
 
-varying vec4 vColor;
+varying vec3  vColor;
 varying float vDepth;
+varying float vOpacity;
 
 void main( void ) {
 
@@ -12,8 +14,9 @@ void main( void ) {
     vec4 csPosition = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     vDepth = csPosition.z;
 
-    gl_PointSize = aSize * ( 100.0 / length( mvPosition.xyz ) );
+    vOpacity = aOpacity;
 
+    gl_PointSize = aSize * ( 100.0 / length( mvPosition.xyz ) );
     gl_Position = projectionMatrix * mvPosition;
 
 }

@@ -102,57 +102,56 @@
     require.define('/emitter.js', function (module, exports, __dirname, __filename) {
         var Material = require('/material.js', module).Material;
         var Emitter = exports.Emitter = function (options) {
-                options = options || {};
-                var count = options.count != null ? options.count : 100;
-                var material = options.material ? options.material : new Material(count, options.color);
+                this.options = options = options || {};
+                var count = this.options.count != null ? this.options.count : 100;
+                var material = this.options.material ? this.options.material : new Material(count, this.options.color);
                 var geometry = new THREE.Geometry();
-                var particlePool = this.particlePool = [];
+                this.particleIndexPool = [];
                 for (var t = 0, T = count; t < T; ++t) {
                     var inf = Number.POSITIVE_INFINITY;
                     var particle = new THREE.Vector3(inf, inf, inf);
                     geometry.vertices.push(particle);
-                    particlePool.push(particle);
+                    this.particleIndexPool.push(t);
                 }
                 THREE.ParticleSystem.call(this, geometry, material);
                 this.dynamic = true;
-                this.emitter = new SPARKLE.Emitter(options.frequency != null ? options.frequency : 0.5);
+                var frequency = this.options.frequency != null ? this.options.frequency : this.options.lifeTime != null ? 1 / (count / this.options.lifeTime[1]) : 0.5;
+                this.emitter = new SPARKLE.Emitter(frequency);
                 this.emitter.initializer(new SPARKLE.LambdaInitializer(function (particle) {
-                    particle.vertice = particlePool.pop();
-                }));
-                if (options.position != null) {
-                    this.emitter.initializer(new SPARKLE.PositionInitializer(options.position));
+                    particle.vertice = this.particleIndexPool.pop();
+                }, this));
+                if (this.options.position != null) {
+                    this.emitter.initializer(new SPARKLE.PositionInitializer(this.options.position));
                 } else {
                     this.emitter.initializer(new SPARKLE.PositionInitializer(new SPARKLE.PointZone(0, 0, 0)));
                 }
-                if (options.lifeTime != null) {
-                    this.emitter.initializer(new SPARKLE.LifeTimeInitializer(options.lifeTime[0], options.lifeTime[1]));
-                    if (options.fadeIn != null)
-                        this.emitter.action(new SPARKLE.FadeInAction(options.fadeIn.duration));
-                    if (options.fadeOut != null)
-                        this.emitter.action(new SPARKLE.FadeOutAction(options.fadeOut.duration));
+                if (this.options.lifeTime != null) {
+                    this.emitter.initializer(new SPARKLE.LifeTimeInitializer(this.options.lifeTime[0], this.options.lifeTime[1]));
+                    if (options.fading)
+                        this.emitter.action(new SPARKLE.FadingAction(typeof this.options.fading === 'function' ? this.options.fading : undefined));
                     this.emitter.action(new SPARKLE.AgeingAction());
                 }
-                if (options.velocity != null) {
-                    this.emitter.initializer(new SPARKLE.VelocityInitializer(options.velocity));
+                if (this.options.velocity != null) {
+                    this.emitter.initializer(new SPARKLE.VelocityInitializer(this.options.velocity));
                     if (options.acceleration != null)
-                        this.emitter.action(new SPARKLE.AccelerationAction(options.acceleration[0], options.acceleration[1], options.acceleration[2]));
+                        this.emitter.action(new SPARKLE.AccelerationAction(this.options.acceleration[0], this.options.acceleration[1], this.options.acceleration[2]));
                     this.emitter.action(new SPARKLE.DisplacementAction());
                 }
-                if (options.initializers != null) {
-                    options.initializers.forEach(function (initializer) {
+                if (this.options.initializers != null) {
+                    this.options.initializers.forEach(function (initializer) {
                         this.emitter.initializer(initializer);
                     }, this);
                 }
-                if (options.actions != null) {
-                    options.actions.forEach(function (action) {
+                if (this.options.actions != null) {
+                    this.options.actions.forEach(function (action) {
                         this.emitter.action(action);
                     }, this);
                 }
                 this.emitter.onWakeUp = this.onWakeUp.bind(this);
                 this.emitter.onUpdate = this.onUpdate.bind(this);
                 this.emitter.onSleep = this.onSleep.bind(this);
-                if (options.initial != null) {
-                    this.emitter.spawn(options.initial[0], options.initial[1]);
+                if (this.options.initial != null) {
+                    this.emitter.spawn(this.options.initial[0], this.options.initial[1]);
                 }
             };
         var F = function () {
@@ -160,8 +159,13 @@
         F.prototype = THREE.ParticleSystem.prototype;
         Emitter.prototype = new F();
         Emitter.prototype.constructor = Emitter;
-        Emitter.prototype.update = function (delta) {
+        Emitter.prototype.update = function (delta, updates) {
             this.emitter.update(delta);
+            if (updates != null)
+                for (var t = 0, T = updates.length; t < T; ++t)
+                    this.material.attributes[updates[t]].needsUpdate = true;
+            if (this.options.fading)
+                this.material.attributes.aOpacity.needsUpdate = true;
             return this;
         };
         Emitter.prototype.spawn = function (count, randomly) {
@@ -171,18 +175,20 @@
         Emitter.prototype.onWakeUp = function (particle, delta) {
         };
         Emitter.prototype.onUpdate = function (particle, delta) {
-            if (!particle.vertice)
+            if (particle.vertice == null)
                 return;
-            particle.vertice.copy(particle.position);
+            this.geometry.vertices[particle.vertice].copy(particle.position);
+            if (this.options.fading)
+                this.material.attributes.aOpacity.value[particle.vertice] = particle.opacity;
             this.geometry.verticesNeedUpdate = true;
         };
         Emitter.prototype.onSleep = function (particle, delta) {
-            if (!particle.vertice)
+            if (particle.vertice == null)
                 return;
             var inf = Number.POSITIVE_INFINITY;
-            particle.vertice.set(inf, inf, inf);
+            this.geometry.vertices[particle.vertice].set(inf, inf, inf);
             this.geometry.verticesNeedUpdate = true;
-            this.particlePool.push(particle.vertice);
+            this.particleIndexPool.push(particle.vertice);
         };
     });
     require.define('/material.js', function (module, exports, __dirname, __filename) {
@@ -220,14 +226,6 @@
                         texture: {
                             type: 't',
                             value: texture
-                        },
-                        color: {
-                            type: 'c',
-                            value: new THREE.Color(16777215)
-                        },
-                        amplitude: {
-                            type: 'f',
-                            value: 50
                         }
                     };
                 var attributes = {
@@ -236,6 +234,10 @@
                             value: []
                         },
                         aSize: {
+                            type: 'f',
+                            value: []
+                        },
+                        aOpacity: {
                             type: 'f',
                             value: []
                         }
@@ -250,6 +252,7 @@
                 for (var t = 0, T = count; t < T; ++t) {
                     attributes.aColor.value[t] = color || randomColor(0.2, 0.2, 0.3);
                     attributes.aSize.value[t] = 50;
+                    attributes.aOpacity.value[t] = 1;
                 }
                 THREE.ShaderMaterial.call(this, {
                     uniforms: uniforms,
@@ -268,10 +271,10 @@
         Material.prototype.Shader = Material;
     });
     require.define('/shaders/fragment.glsl', function (module, exports, __dirname, __filename) {
-        module.exports = 'uniform vec3 color;\nuniform sampler2D texture;\n\nvarying vec4 vColor;\nvarying float vDepth;\n\nvoid main( void ) {\n\n    vec4 outColor = texture2D( texture, gl_PointCoord );\n\n    gl_FragColor = outColor * vec4( color * vColor.xyz, 1.0 );\n    gl_FragColor *= (300.0 - vDepth ) / 300.0;\n\n}\n';
+        module.exports = 'uniform sampler2D texture;\n\nvarying vec3  vColor;\nvarying float vDepth;\nvarying float vOpacity;\n\nvoid main( void ) {\n\n    vec4 outColor = texture2D( texture, gl_PointCoord );\n\n    gl_FragColor = outColor * vec4( vColor, 1.0 );\n    gl_FragColor *= (300.0 - vDepth ) / 300.0;\n    gl_FragColor.a *= vOpacity;\n\n}\n';
     });
     require.define('/shaders/vertex.glsl', function (module, exports, __dirname, __filename) {
-        module.exports = 'attribute float aSize;\nattribute vec4 aColor;\n\nvarying vec4 vColor;\nvarying float vDepth;\n\nvoid main( void ) {\n\n    vColor = aColor;\n\n    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n    vec4 csPosition = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n    vDepth = csPosition.z;\n\n    gl_PointSize = aSize * ( 100.0 / length( mvPosition.xyz ) );\n\n    gl_Position = projectionMatrix * mvPosition;\n\n}\n';
+        module.exports = 'attribute vec3  aColor;\nattribute float aSize;\nattribute float aOpacity;\n\nvarying vec3  vColor;\nvarying float vDepth;\nvarying float vOpacity;\n\nvoid main( void ) {\n\n    vColor = aColor;\n\n    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n    vec4 csPosition = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n    vDepth = csPosition.z;\n\n    vOpacity = aOpacity;\n\n    gl_PointSize = aSize * ( 100.0 / length( mvPosition.xyz ) );\n    gl_Position = projectionMatrix * mvPosition;\n\n}\n';
     });
     SPARKLE.THREE = require('/index.js');
 }.call(this, this));

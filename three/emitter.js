@@ -2,16 +2,16 @@ var Material = require( 'material' ).Material;
 
 var Emitter = exports.Emitter = function ( options ) {
 
-    options = options || { };
+    this.options = options = options || { };
 
     // Generating particles geometry
 
-    var count = options.count != null ? options.count : 100;
+    var count = this.options.count != null ? this.options.count : 100;
 
-    var material = options.material ? options.material : new Material( count, options.color );
+    var material = this.options.material ? this.options.material : new Material( count, this.options.color );
     var geometry = new THREE.Geometry( );
 
-    var particlePool = this.particlePool = [ ];
+    this.particleIndexPool = [ ];
 
     for ( var t = 0, T = count; t < T; ++ t ) {
 
@@ -19,7 +19,7 @@ var Emitter = exports.Emitter = function ( options ) {
         var particle = new THREE.Vector3( inf, inf, inf );
 
         geometry.vertices.push( particle );
-        particlePool.push( particle );
+        this.particleIndexPool.push( t );
 
     }
 
@@ -30,57 +30,60 @@ var Emitter = exports.Emitter = function ( options ) {
 
     // Creating a basic emitter
 
-    this.emitter = new SPARKLE.Emitter( options.frequency != null ? options.frequency : .5 );
+    var frequency = this.options.frequency != null
+        ? this.options.frequency
+        : this.options.lifeTime != null
+            ? 1 / ( count / this.options.lifeTime[ 1 ] )
+            : .5;
+
+    this.emitter = new SPARKLE.Emitter( frequency );
 
     // Link spark particles with Three.js ones
 
     this.emitter.initializer( new SPARKLE.LambdaInitializer( function ( particle ) {
-        particle.vertice = particlePool.pop( );
-    } ) );
+        particle.vertice = this.particleIndexPool.pop( );
+    }, this ) );
 
     // Position option
 
-    if ( options.position != null ) {
-        this.emitter.initializer( new SPARKLE.PositionInitializer( options.position ) );
+    if ( this.options.position != null ) {
+        this.emitter.initializer( new SPARKLE.PositionInitializer( this.options.position ) );
     } else {
         this.emitter.initializer( new SPARKLE.PositionInitializer( new SPARKLE.PointZone( 0, 0, 0 ) ) );
     }
 
     // Lifetime option
 
-    if ( options.lifeTime != null ) {
-        this.emitter.initializer( new SPARKLE.LifeTimeInitializer( options.lifeTime[ 0 ], options.lifeTime[ 1 ] ) );
+    if ( this.options.lifeTime != null ) {
+        this.emitter.initializer( new SPARKLE.LifeTimeInitializer( this.options.lifeTime[ 0 ], this.options.lifeTime[ 1 ] ) );
 
-        if ( options.fadeIn != null )
-            this.emitter.action( new SPARKLE.FadeInAction( options.fadeIn.duration ) );
-
-        if ( options.fadeOut != null )
-            this.emitter.action( new SPARKLE.FadeOutAction( options.fadeOut.duration ) );
+        if ( options.fading )
+            this.emitter.action( new SPARKLE.FadingAction( typeof this.options.fading === 'function' ? this.options.fading : undefined ) );
 
         this.emitter.action( new SPARKLE.AgeingAction( ) );
     }
 
     // Velocity option
 
-    if ( options.velocity != null ) {
-        this.emitter.initializer( new SPARKLE.VelocityInitializer( options.velocity ) );
+    if ( this.options.velocity != null ) {
+        this.emitter.initializer( new SPARKLE.VelocityInitializer( this.options.velocity ) );
 
         if ( options.acceleration != null )
-            this.emitter.action( new SPARKLE.AccelerationAction( options.acceleration[ 0 ], options.acceleration[ 1 ], options.acceleration[ 2 ] ) );
+            this.emitter.action( new SPARKLE.AccelerationAction( this.options.acceleration[ 0 ], this.options.acceleration[ 1 ], this.options.acceleration[ 2 ] ) );
 
         this.emitter.action( new SPARKLE.DisplacementAction( ) );
     }
 
     // Custom initializers & actions
 
-    if ( options.initializers != null ) {
-        options.initializers.forEach( function ( initializer ) {
+    if ( this.options.initializers != null ) {
+        this.options.initializers.forEach( function ( initializer ) {
             this.emitter.initializer( initializer );
         }, this );
     }
 
-    if ( options.actions != null ) {
-        options.actions.forEach( function ( action ) {
+    if ( this.options.actions != null ) {
+        this.options.actions.forEach( function ( action ) {
             this.emitter.action( action );
         }, this );
     }
@@ -93,8 +96,8 @@ var Emitter = exports.Emitter = function ( options ) {
 
     // Display initial particles
 
-    if ( options.initial != null ) {
-        this.emitter.spawn( options.initial[ 0 ], options.initial[ 1 ] );
+    if ( this.options.initial != null ) {
+        this.emitter.spawn( this.options.initial[ 0 ], this.options.initial[ 1 ] );
     }
 
 };
@@ -105,9 +108,16 @@ F.prototype = THREE.ParticleSystem.prototype;
 Emitter.prototype = new F( );
 Emitter.prototype.constructor = Emitter;
 
-Emitter.prototype.update = function ( delta ) {
+Emitter.prototype.update = function ( delta, updates ) {
 
     this.emitter.update( delta );
+
+    if ( updates != null )
+        for ( var t = 0, T = updates.length; t < T; ++ t )
+            this.material.attributes[ updates[ t ] ].needsUpdate = true;
+
+    if ( this.options.fading )
+        this.material.attributes.aOpacity.needsUpdate = true;
 
     return this;
 
@@ -127,9 +137,12 @@ Emitter.prototype.onWakeUp = function ( particle, delta ) {
 
 Emitter.prototype.onUpdate = function ( particle, delta ) {
 
-    if ( ! particle.vertice ) return ;
+    if ( particle.vertice == null ) return ;
 
-    particle.vertice.copy( particle.position );
+    this.geometry.vertices[ particle.vertice ].copy( particle.position );
+
+    if ( this.options.fading )
+        this.material.attributes.aOpacity.value[ particle.vertice ] = particle.opacity;
 
     this.geometry.verticesNeedUpdate = true;
 
@@ -137,14 +150,13 @@ Emitter.prototype.onUpdate = function ( particle, delta ) {
 
 Emitter.prototype.onSleep = function ( particle, delta ) {
 
-    if ( ! particle.vertice ) return ;
+    if ( particle.vertice == null ) return ;
 
     var inf = Number.POSITIVE_INFINITY;
-
-    particle.vertice.set( inf, inf, inf );
+    this.geometry.vertices[ particle.vertice ].set( inf, inf, inf );
 
     this.geometry.verticesNeedUpdate = true;
 
-    this.particlePool.push( particle.vertice );
+    this.particleIndexPool.push( particle.vertice );
 
 };
