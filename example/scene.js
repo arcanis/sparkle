@@ -1,8 +1,3 @@
-var m = new MersenneTwister( );
-Math.random = function ( ) {
-    return m.random( );
-};
-
 var renderer = new THREE.WebGLRenderer( { canvas : document.getElementById( 'canvas' ) } );
 renderer.setClearColor( new THREE.Color( 0x000000 ), 1 );
 
@@ -21,7 +16,7 @@ var camera = new THREE.PerspectiveCamera( 60, 0, .1, 10000 );
 scene.add( camera );
 
 var emitter, loader = new THREE.OBJLoader( );
-loader.load( 'horse.obj', function ( object ) {
+loader.load( 'assets/horse.obj', function ( object ) {
     horse.add( emitter = new SPARKLE.THREE.Emitter( {
 
         count : 4000,
