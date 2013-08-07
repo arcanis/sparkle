@@ -44,9 +44,9 @@ setInterval( function ( ) {
 }, 1000 / 60 );
 ```
 
-## [Example](http://arcanis.github.io/sparkle/example/)
+## [Example](http://arcanis.github.io/sparkle/example/) ([More examples](http://imgur.com/a/MMxnT))
 
-[![Example](http://www.clipular.com/c?13154037=RYYRRywh6wtH4rnGYrfUsl3-yH0&f=.png)](http://arcanis.github.io/sparkle/example/)
+[![Example](http://i.imgur.com/TJ7uKyB.png)](http://arcanis.github.io/sparkle/example/)
 
 ## Reference
 
