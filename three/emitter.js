@@ -8,7 +8,7 @@ var Emitter = exports.Emitter = function ( options ) {
 
     var count = this.options.count != null ? this.options.count : 100;
 
-    var material = this.options.material ? this.options.material : new Material( count, this.options.color );
+    var material = this.options.material ? this.options.material : new Material( count );
     var geometry = new THREE.Geometry( );
 
     this.particleIndexPool = [ ];
@@ -74,6 +74,12 @@ var Emitter = exports.Emitter = function ( options ) {
         this.emitter.action( new SPARKLE.DisplacementAction( ) );
     }
 
+    // Color option
+
+    if ( this.options.color != null ) {
+        this.emitter.initializer( new SPARKLE.THREE.ColorInitializer( this.options.color, this.options.colorMode ) );
+    }
+
     // Custom initializers & actions
 
     if ( this.options.initializers != null ) {
@@ -133,18 +139,26 @@ Emitter.prototype.spawn = function ( count, randomly ) {
 
 Emitter.prototype.onWakeUp = function ( particle, delta ) {
 
+    if ( particle.vertice == null ) return ;
+
+    if ( this.options.color ) {
+        this.material.attributes.aColor.value[ particle.vertice ] = particle.color;
+        this.material.attributes.aColor.needsUpdate = true;
+    }
+
 };
 
 Emitter.prototype.onUpdate = function ( particle, delta ) {
 
     if ( particle.vertice == null ) return ;
 
-    this.geometry.vertices[ particle.vertice ].copy( particle.position );
-
     if ( this.options.fading )
         this.material.attributes.aOpacity.value[ particle.vertice ] = particle.opacity;
 
-    this.geometry.verticesNeedUpdate = true;
+    if ( this.options.velocity ) {
+        this.geometry.vertices[ particle.vertice ].copy( particle.position );
+        this.geometry.verticesNeedUpdate = true;
+    }
 
 };
 

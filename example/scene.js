@@ -17,13 +17,17 @@ scene.add( camera );
 
 var emitter, loader = new THREE.OBJLoader( );
 loader.load( 'assets/horse.obj', function ( object ) {
+    var fullGeometry = object.children[ 1 ].geometry;
+
     horse.add( emitter = new SPARKLE.THREE.Emitter( {
 
         count : 4000,
         lifeTime : [ 1, 2 ], fading: true,
 
-        position : new SPARKLE.THREE.GeometryZone( object.children[ 1 ].geometry ),
-        velocity : new SPARKLE.SphereZone( 3, 3, 3 )
+        color : new SPARKLE.SetZone( [ new THREE.Vector3( .6, .6, .4 ), new THREE.Vector3( .4, .3, .1 ) ] ),
+
+        position : new SPARKLE.THREE.GeometryZone( fullGeometry ),
+        velocity : new SPARKLE.SphereZone( 2, 2, 2 )
 
     } ) );
 } );

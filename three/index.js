@@ -1,3 +1,5 @@
-exports.Emitter = require( 'emitter' ).Emitter;
+exports.Emitter          = require( 'emitter' ).Emitter;
 
-exports.GeometryZone = require( 'zones/geometry' ).Geometry;
+exports.ColorInitializer = require( 'initializers/color' ).Color;
+
+exports.GeometryZone     = require( 'zones/geometry' ).Geometry;

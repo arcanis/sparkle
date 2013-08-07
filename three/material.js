@@ -40,7 +40,7 @@ var texture = ( function ( size ) {
 
 } )( 128 );
 
-var Material = exports.Material = function ( count, color ) {
+var Material = exports.Material = function ( count ) {
 
     var uniforms = {
         texture : { type : 't', value : texture }
@@ -61,9 +61,9 @@ var Material = exports.Material = function ( count, color ) {
     };
 
     for ( var t = 0, T = count; t < T; ++ t ) {
-        attributes.aColor.value[ t ] = color || randomColor( .2, .2, .3 );
-        attributes.aSize.value[ t ] = 50;
         attributes.aOpacity.value[ t ] = 1;
+        attributes.aColor.value[ t ] = randomColor( .3, .3, .3 );
+        attributes.aSize.value[ t ] = 20;
     }
 
     THREE.ShaderMaterial.call( this, {

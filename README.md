@@ -10,7 +10,7 @@ scene.add( emitter = new SPARKLE.THREE.Emitter( {
     count : 1000,
     lifeTime : [ 1, 1.5 ],
     fading : true,
-    color : new THREE.Color( 0x220000 ),
+    color : new THREE.CuboidZone( .2, 0, 0 ),
     velocity : velocity
 } ) );
 
@@ -73,6 +73,10 @@ Will set the particle position to a random point inside `zone`.
 
 Will set the particle velocity to a random value from `zone`.
 
+#### `SPARKLE.THREE.ColorInitializer( zone )` (Three.js only)
+
+Will set the particle color to a random value from `zone`. X, Y and Z values will be respectively mapped on R, G and B.
+
 ### Actions
 
 They are called at each frame. They contain the following method :
@@ -102,9 +106,9 @@ They represent a geometrical shape. They contain the two following methods :
 - `random( )`, which has to return a random coordinate inside the zone.
 - `free( coord )`, which dispose the coordinate.
 
-#### `SPARKLE.AsyncZone( fn )`
+#### `SPARKLE.AsyncZone( fn [, context] )`
 
-Immediately calls `fn`, passing it a function as parameter. This function takes a Zone as parameter, and set it as the 'real' zone.
+Immediately calls `fn` with the specified context, passing it a function as parameter. This function takes a Zone as parameter, and set it as the 'real' zone.
 
 As long as this callback is not alled, the AsyncZone will always return a null position.
 
@@ -123,6 +127,12 @@ Represents a point.
 #### `SPARKLE.SphereZone( r, inner, uniform )`
 
 Represents a sphere.
+
+#### `SPARKLE.THREE.SetZone( points )`
+
+Represents an array of coordinates.
+
+When a coordinate will have to be generated, it will be one of those points.
 
 #### `SPARKLE.THREE.GeometryZone( geometry )` (Three.js only)
 

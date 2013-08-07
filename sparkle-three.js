@@ -51,6 +51,7 @@
         }();
     require.define('/index.js', function (module, exports, __dirname, __filename) {
         exports.Emitter = require('/emitter.js', module).Emitter;
+        exports.ColorInitializer = require('/initializers/color.js', module).Color;
         exports.GeometryZone = require('/zones/geometry.js', module).Geometry;
     });
     require.define('/zones/geometry.js', function (module, exports, __dirname, __filename) {
@@ -99,12 +100,28 @@
             SPARKLE.coordFactory.free(coord);
         };
     });
+    require.define('/initializers/color.js', function (module, exports, __dirname, __filename) {
+        var colorFactory = require('/factories/colors.js', module).factory;
+        var Color = exports.Color = function (zone, mode) {
+                this._zone = zone;
+                this._mode = (mode || 'RGB').toUpperCase();
+            };
+        Color.prototype.initialize = function (particle) {
+            var coord = this._zone.random();
+            particle.color = colorFactory.alloc();
+            particle.color['set' + this._mode](coord.x, coord.y, coord.z);
+            this._zone.free(coord);
+        };
+    });
+    require.define('/factories/colors.js', function (module, exports, __dirname, __filename) {
+        exports.factory = new SPARKLE.Factory(THREE.Color);
+    });
     require.define('/emitter.js', function (module, exports, __dirname, __filename) {
         var Material = require('/material.js', module).Material;
         var Emitter = exports.Emitter = function (options) {
                 this.options = options = options || {};
                 var count = this.options.count != null ? this.options.count : 100;
-                var material = this.options.material ? this.options.material : new Material(count, this.options.color);
+                var material = this.options.material ? this.options.material : new Material(count);
                 var geometry = new THREE.Geometry();
                 this.particleIndexPool = [];
                 for (var t = 0, T = count; t < T; ++t) {
@@ -136,6 +153,9 @@
                     if (options.acceleration != null)
                         this.emitter.action(new SPARKLE.AccelerationAction(this.options.acceleration[0], this.options.acceleration[1], this.options.acceleration[2]));
                     this.emitter.action(new SPARKLE.DisplacementAction());
+                }
+                if (this.options.color != null) {
+                    this.emitter.initializer(new SPARKLE.THREE.ColorInitializer(this.options.color, this.options.colorMode));
                 }
                 if (this.options.initializers != null) {
                     this.options.initializers.forEach(function (initializer) {
@@ -173,14 +193,22 @@
             return this;
         };
         Emitter.prototype.onWakeUp = function (particle, delta) {
+            if (particle.vertice == null)
+                return;
+            if (this.options.color) {
+                this.material.attributes.aColor.value[particle.vertice] = particle.color;
+                this.material.attributes.aColor.needsUpdate = true;
+            }
         };
         Emitter.prototype.onUpdate = function (particle, delta) {
             if (particle.vertice == null)
                 return;
-            this.geometry.vertices[particle.vertice].copy(particle.position);
             if (this.options.fading)
                 this.material.attributes.aOpacity.value[particle.vertice] = particle.opacity;
-            this.geometry.verticesNeedUpdate = true;
+            if (this.options.velocity) {
+                this.geometry.vertices[particle.vertice].copy(particle.position);
+                this.geometry.verticesNeedUpdate = true;
+            }
         };
         Emitter.prototype.onSleep = function (particle, delta) {
             if (particle.vertice == null)
@@ -221,7 +249,7 @@
                 });
                 return texture;
             }(128);
-        var Material = exports.Material = function (count, color) {
+        var Material = exports.Material = function (count) {
                 var uniforms = {
                         texture: {
                             type: 't',
@@ -250,9 +278,9 @@
                     return color;
                 };
                 for (var t = 0, T = count; t < T; ++t) {
-                    attributes.aColor.value[t] = color || randomColor(0.2, 0.2, 0.3);
-                    attributes.aSize.value[t] = 50;
                     attributes.aOpacity.value[t] = 1;
+                    attributes.aColor.value[t] = randomColor(0.3, 0.3, 0.3);
+                    attributes.aSize.value[t] = 20;
                 }
                 THREE.ShaderMaterial.call(this, {
                     uniforms: uniforms,

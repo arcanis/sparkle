@@ -51,6 +51,7 @@
         }();
     require.define('/index.js', function (module, exports, __dirname, __filename) {
         exports.Emitter = require('/emitter.js', module).Emitter;
+        exports.Factory = require('/factory.js', module).Factory;
         exports.LambdaInitializer = require('/initializers/lambda.js', module).Lambda;
         exports.PositionInitializer = require('/initializers/position.js', module).Position;
         exports.VelocityInitializer = require('/initializers/velocity.js', module).Velocity;
@@ -64,6 +65,7 @@
         exports.CuboidZone = require('/zones/cuboid.js', module).Cuboid;
         exports.SphereZone = require('/zones/sphere.js', module).Sphere;
         exports.AsyncZone = require('/zones/async.js', module).Async;
+        exports.SetZone = require('/zones/set.js', module).Set;
         exports.particleFactory = require('/factories/particles.js', module).factory;
         exports.coordFactory = require('/factories/coords.js', module).factory;
     });
@@ -105,14 +107,24 @@
         var Factory = require('/factory.js', module).Factory;
         exports.factory = new Factory(require('/types.js', module).Particle);
     });
+    require.define('/zones/set.js', function (module, exports, __dirname, __filename) {
+        var Set = exports.Set = function (coords) {
+                this._coords = coords;
+            };
+        Set.prototype.random = function () {
+            return this._coords[Math.floor(Math.random() * this._coords.length)];
+        };
+        Set.prototype.free = function () {
+        };
+    });
     require.define('/zones/async.js', function (module, exports, __dirname, __filename) {
         var coordFactory = require('/factories/coords.js', module).factory;
-        var Async = exports.Async = function (fn) {
+        var Async = exports.Async = function (fn, context) {
                 this._fallback = coordFactory.alloc();
                 this._fallback.x = 0;
                 this._fallback.y = 0;
                 this._fallback.z = 0;
-                fn(this.update.bind(this));
+                fn.call(context, this.update.bind(this));
             };
         Async.prototype.update = function (zone) {
             this._zone = zone;
