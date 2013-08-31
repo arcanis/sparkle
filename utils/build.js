@@ -13,5 +13,5 @@ var compile = function ( file, directory, destination ) {
         'export' : destination,
         'handlers' : { '.glsl' : plainText } } ) ) ); };
 
-compile( 'sparkle.js', 'lib', 'SPARKLE' );
-compile( 'sparkle-three.js', 'three', 'SPARKLE.THREE' );
+compile( 'sparkle.min.js', 'lib', 'SPARKLE' );
+compile( 'sparkle-three.min.js', 'three', 'SPARKLE.THREE' );

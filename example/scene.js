@@ -21,13 +21,14 @@ loader.load( 'assets/horse.obj', function ( object ) {
 
     horse.add( emitter = new SPARKLE.THREE.Emitter( {
 
-        count : 4000,
-        lifeTime : [ 1, 2 ], fading: true,
+        count : 3000,
+        lifeTime : SPARKLE.lineZone( 1, 2 ), fading : true,
+        frequency : 1 / 4000,
 
-        color : new SPARKLE.SetZone( [ new THREE.Vector3( .6, .6, .4 ), new THREE.Vector3( .4, .3, .1 ) ] ),
+        color : SPARKLE.arrayZone( [ [.6, .6, .4 ], [ .4, .3, .1 ] ] ),
 
-        position : new SPARKLE.THREE.GeometryZone( fullGeometry ),
-        velocity : new SPARKLE.SphereZone( 2, 2, 2 )
+        position : SPARKLE.THREE.geometryZone( fullGeometry ),
+        velocity : SPARKLE.sphereZone( 2, 2, 2 )
 
     } ) );
 } );

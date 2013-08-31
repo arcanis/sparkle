@@ -1,8 +1,7 @@
 exports.Emitter          = require( 'emitter' ).Emitter;
 
-exports.ColorInitializer = require( 'initializers/color' ).Color;
+exports.colorInitializer = require( 'initializers/color' ).color;
 
-exports.GeometryZone     = require( 'zones/geometry' ).Geometry;
+exports.geometryZone     = require( 'zones/geometry' ).geometry;
 
-exports.plainCircle      = require( 'textures' ).plainCircle;
-exports.gradientCircle   = require( 'textures' ).gradientCircle;
+exports.circleTexture    = require( 'textures' ).circle;

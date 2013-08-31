@@ -1,20 +1,21 @@
-var colorFactory = require( 'factories/colors' ).factory;
+exports.color = function ( zone, mode ) {
 
-var Color = exports.Color = function ( zone, mode ) {
+    if ( typeof mode === 'undefined' ) {
+        mode = 'RGB';
+    } else {
+        mode = mode.toUpperCase( );
+    }
 
-    this._zone = zone;
+    var vector = [ NaN, NaN, NaN ];
 
-    this._mode = ( mode || 'RGB' ).toUpperCase( );
+    return function ( particle ) {
 
-};
+        if ( ! particle.color )
+            particle.color = new THREE.Color( );
 
-Color.prototype.initialize = function ( particle ) {
+        SPARKLE.utils.asVector( zone, vector );
+        particle.color[ 'set' + mode ]( vector[ 0 ], vector[ 1 ], vector[ 2 ] );
 
-    var coord = this._zone.random( );
-
-    particle.color = colorFactory.alloc( );
-    particle.color[ 'set' + this._mode ]( coord.x, coord.y, coord.z );
-
-    this._zone.free( coord );
+    };
 
 };

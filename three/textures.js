@@ -1,52 +1,44 @@
-exports.plainCircle = function ( resolution ) {
+var createCanvas = function ( resolution, options ) {
 
     var canvas = document.createElement( 'canvas' );
     canvas.width = canvas.height = resolution;
 
     var texture = new THREE.Texture( canvas );
-
-    var context = canvas.getContext( '2d' );
     texture.needsUpdate = true;
 
-    context.fillStyle = 'white';
+    var context = canvas.getContext( '2d' );
 
-    context.beginPath( );
-    context.arc( resolution / 2, resolution / 2, resolution / 2 * .95, 0, Math.PI * 2, false );
-    context.closePath( );
-
-    context.fill( );
-
-    return texture;
+    return {
+        canvas : canvas,
+        texture : texture,
+        context : context
+    };
 
 };
 
-exports.gradientCircle = function ( resolution ) {
+exports.circle = function ( resolution, options ) {
 
-    var stops = Array.prototype.slice.call( arguments, 1 );
+    if ( typeof options === 'undefined' )
+        options = { };
 
-    var canvas = document.createElement( 'canvas' );
-    canvas.width = canvas.height = resolution;
+    var element = createCanvas( resolution, options );
 
-    var texture = new THREE.Texture( canvas );
+    element.context.beginPath( );
+    element.context.arc( resolution / 2, resolution / 2, resolution / 2, 0, Math.PI * 2, false );
+    element.context.closePath( );
 
-    var context = canvas.getContext( '2d' );
-    texture.needsUpdate = true;
+    if ( options.stops != null ) {
+        element.context.fillStyle = element.context.createRadialGradient( resolution / 2, resolution / 2, 0, resolution / 2, resolution / 2, resolution / 2 );
 
-    context.fillStyle = 'white';
+        Object.keys( options.stops ).sort( ).forEach( function ( stop ) {
+            element.context.fillStyle.addColorStop( stop, 'rgba( %n, %n, %n, 1)'.replace( /%n/g, 255 * options.stops[ stop ] ) );
+        } );
+    } else {
+        element.context.fillStyle = 'white';
+    }
 
-    context.beginPath( );
-    context.arc( resolution / 2, resolution / 2, resolution / 2 * .95, 0, Math.PI * 2, false );
-    context.closePath( );
+    element.context.fill( );
 
-    var gradient = context.createRadialGradient( resolution / 2, resolution / 2, 0, resolution / 2, resolution / 2, resolution / 2 );
-    gradient.addColorStop( 0, 'rgba( 255, 255, 255, 1)' );
-    for ( var t = 0, T = stops.length, step = 255 / ( T + 1 ); t < T; ++ t )
-        gradient.addColorStop( stops[ t ], 'rgba( %n, %n, %n, 1)'.replace( /%n/g, ( 255 - step * ( t + 1 ) ) ) );
-    gradient.addColorStop( 1, 'rgba( 0, 0, 0, 1 )' );
-    context.fillStyle = gradient;
-
-    context.fill( );
-
-    return texture;
+    return element.texture;
 
 };

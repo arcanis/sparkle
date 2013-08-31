@@ -1,12 +1,15 @@
 var vertexShaderGlsl = require( 'shaders/vertex.glsl' );
 var fragmentShaderGlsl = require( 'shaders/fragment.glsl' );
 
-var defaultTexture = require( './textures' ).gradientCircle( 128 );
+var defaultTexture = require( './textures' ).circle( 128, { stops : { 0 : 1, 1 : 0 } } );
 
-var Material = exports.Material = function ( count, texture ) {
+var Material = exports.Material = function ( count, options ) {
+
+    this.options = options;
 
     var uniforms = {
-        texture : { type : 't', value : texture || defaultTexture }
+        texture : { type : 't', value : this.options.texture || defaultTexture },
+        size    : { type : 'f', value : this.options.size || 40 }
     };
 
     var attributes = {
@@ -26,7 +29,7 @@ var Material = exports.Material = function ( count, texture ) {
     for ( var t = 0, T = count; t < T; ++ t ) {
         attributes.aOpacity.value[ t ] = 1;
         attributes.aColor.value[ t ] = randomColor( .3, .3, .3 );
-        attributes.aSize.value[ t ] = 20;
+        attributes.aSize.value[ t ] = 1;
     }
 
     THREE.ShaderMaterial.call( this, {
@@ -37,7 +40,7 @@ var Material = exports.Material = function ( count, texture ) {
         vertexShader : vertexShaderGlsl,
         fragmentShader : fragmentShaderGlsl,
 
-        blending : THREE.AdditiveBlending,
+        blending : this.options.blending != null ? this.options.blending : THREE.AdditiveBlending,
 
         depthTest : false,
         transparent : true

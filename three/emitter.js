@@ -8,9 +8,13 @@ var Emitter = exports.Emitter = function ( options ) {
 
     var count = this.options.count != null ? this.options.count : 100;
 
-    var material = this.options.material ? this.options.material : new DefaultMaterial( count, this.options.texture );
-    var geometry = new THREE.Geometry( );
+    var material = this.options.material ? this.options.material : new DefaultMaterial( count, {
+        texture : this.options.texture,
+        size : this.options.size,
+        blending : this.options.blending
+    } );
 
+    var geometry = new THREE.Geometry( );
     this.particleIndexPool = [ ];
 
     for ( var t = 0, T = count; t < T; ++ t ) {
@@ -31,53 +35,55 @@ var Emitter = exports.Emitter = function ( options ) {
     // Creating a basic emitter
 
     var frequency = this.options.frequency != null
-        ? this.options.frequency
-        : this.options.lifeTime != null
-            ? 1 / ( count / this.options.lifeTime[ 1 ] )
-            : .5;
+        ? this.options.frequency : .1;
 
     this.emitter = new SPARKLE.Emitter( frequency );
 
     // Link spark particles with Three.js ones
 
-    this.emitter.initializer( new SPARKLE.LambdaInitializer( function ( particle ) {
+    this.emitter.initializer( function ( particle ) {
         particle.vertice = this.particleIndexPool.pop( );
-    }, this ) );
+    }.bind( this ) );
 
     // Position option
 
     if ( this.options.position != null ) {
-        this.emitter.initializer( new SPARKLE.PositionInitializer( this.options.position ) );
+        this.emitter.initializer( SPARKLE.positionInitializer( this.options.position ) );
     } else {
-        this.emitter.initializer( new SPARKLE.PositionInitializer( new SPARKLE.PointZone( 0, 0, 0 ) ) );
+        this.emitter.initializer( SPARKLE.positionInitializer( [ 0, 0, 0 ] ) );
     }
 
     // Lifetime option
 
     if ( this.options.lifeTime != null ) {
-        this.emitter.initializer( new SPARKLE.LifeTimeInitializer( this.options.lifeTime[ 0 ], this.options.lifeTime[ 1 ] ) );
+        this.emitter.initializer( SPARKLE.lifeTimeInitializer( this.options.lifeTime ) );
 
-        if ( options.fading )
-            this.emitter.action( new SPARKLE.FadingAction( typeof this.options.fading === 'function' ? this.options.fading : undefined ) );
+        this.emitter.action( SPARKLE.ageAction( this.options.eternal ) );
 
-        this.emitter.action( new SPARKLE.AgeingAction( ) );
+        if ( options.fading ) {
+            this.emitter.action( SPARKLE.fadeAction( typeof this.options.fading === 'function' ? this.options.fading : undefined ) );
+        }
+
+        if ( options.pulsing ) {
+            this.emitter.action( SPARKLE.pulseAction( typeof this.options.pulsing === 'function' ? this.options.pulsing : undefined ) );
+        }
     }
 
     // Velocity option
 
     if ( this.options.velocity != null ) {
-        this.emitter.initializer( new SPARKLE.VelocityInitializer( this.options.velocity ) );
+        this.emitter.initializer( SPARKLE.velocityInitializer( this.options.velocity ) );
 
         if ( options.acceleration != null )
-            this.emitter.action( new SPARKLE.AccelerationAction( this.options.acceleration[ 0 ], this.options.acceleration[ 1 ], this.options.acceleration[ 2 ] ) );
+            this.emitter.action( SPARKLE.accelerateAction( this.options.acceleration[ 0 ], this.options.acceleration[ 1 ], this.options.acceleration[ 2 ] ) );
 
-        this.emitter.action( new SPARKLE.DisplacementAction( ) );
+        this.emitter.action( SPARKLE.moveAction( ) );
     }
 
     // Color option
 
     if ( this.options.color != null ) {
-        this.emitter.initializer( new SPARKLE.THREE.ColorInitializer( this.options.color, this.options.colorMode ) );
+        this.emitter.initializer( SPARKLE.THREE.colorInitializer( this.options.color, this.options.colorMode ) );
     }
 
     // Custom initializers & actions
@@ -122,8 +128,14 @@ Emitter.prototype.update = function ( delta, updates ) {
         for ( var t = 0, T = updates.length; t < T; ++ t )
             this.material.attributes[ updates[ t ] ].needsUpdate = true;
 
+    if ( this.options.pulsing )
+        this.material.attributes.aSize.needsUpdate = true;
+
     if ( this.options.fading )
         this.material.attributes.aOpacity.needsUpdate = true;
+
+    if ( this.options.velocity )
+        this.geometry.verticesNeedUpdate = true;
 
     return this;
 
@@ -152,12 +164,14 @@ Emitter.prototype.onUpdate = function ( particle, delta ) {
 
     if ( particle.vertice == null ) return ;
 
+    if ( this.options.pulsing )
+        this.material.attributes.aSize.value[ particle.vertice ] = particle.size;
+
     if ( this.options.fading )
         this.material.attributes.aOpacity.value[ particle.vertice ] = particle.opacity;
 
     if ( this.options.velocity ) {
-        this.geometry.vertices[ particle.vertice ].copy( particle.position );
-        this.geometry.verticesNeedUpdate = true;
+        this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
     }
 
 };
