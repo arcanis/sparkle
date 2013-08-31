@@ -1,49 +1,12 @@
 var vertexShaderGlsl = require( 'shaders/vertex.glsl' );
 var fragmentShaderGlsl = require( 'shaders/fragment.glsl' );
 
-var texture = ( function ( size ) {
+var defaultTexture = require( './textures' ).gradientCircle( 128 );
 
-    var canvas = document.createElement( 'canvas' );
-    canvas.width = canvas.height = size;
-
-    var texture = new THREE.Texture( canvas );
-
-    var draw = function ( ) {
-        var context = canvas.getContext( '2d' );
-        texture.needsUpdate = true;
-
-        context.fillStyle = 'white';
-        context.strokeStyle = 'red';
-
-        context.beginPath( );
-        context.arc( 64, 64, 60, 0, Math.PI * 2, false );
-        context.closePath( );
-
-        context.lineWidth = 0.5;
-        context.stroke( );
-
-        var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
-        gradient.addColorStop( 0, 'rgba( 255, 255, 255, 1)' );
-        gradient.addColorStop( 0.2, 'rgba( 255, 255, 255, 1)' );
-        gradient.addColorStop( 0.4, 'rgba( 128, 128, 128, 1)' );
-        gradient.addColorStop( 1, 'rgba( 0, 0, 0, 1 )' );
-        context.fillStyle = gradient;
-
-        context.fill( );
-    };
-
-    window.addEventListener( 'load', function ( ) {
-        draw( );
-    } );
-
-    return texture;
-
-} )( 128 );
-
-var Material = exports.Material = function ( count ) {
+var Material = exports.Material = function ( count, texture ) {
 
     var uniforms = {
-        texture : { type : 't', value : texture }
+        texture : { type : 't', value : texture || defaultTexture }
     };
 
     var attributes = {

@@ -53,6 +53,43 @@
         exports.Emitter = require('/emitter.js', module).Emitter;
         exports.ColorInitializer = require('/initializers/color.js', module).Color;
         exports.GeometryZone = require('/zones/geometry.js', module).Geometry;
+        exports.plainCircle = require('/textures.js', module).plainCircle;
+        exports.gradientCircle = require('/textures.js', module).gradientCircle;
+    });
+    require.define('/textures.js', function (module, exports, __dirname, __filename) {
+        exports.plainCircle = function (resolution) {
+            var canvas = document.createElement('canvas');
+            canvas.width = canvas.height = resolution;
+            var texture = new THREE.Texture(canvas);
+            var context = canvas.getContext('2d');
+            texture.needsUpdate = true;
+            context.fillStyle = 'white';
+            context.beginPath();
+            context.arc(resolution / 2, resolution / 2, resolution / 2 * 0.95, 0, Math.PI * 2, false);
+            context.closePath();
+            context.fill();
+            return texture;
+        };
+        exports.gradientCircle = function (resolution) {
+            var stops = Array.prototype.slice.call(arguments, 1);
+            var canvas = document.createElement('canvas');
+            canvas.width = canvas.height = resolution;
+            var texture = new THREE.Texture(canvas);
+            var context = canvas.getContext('2d');
+            texture.needsUpdate = true;
+            context.fillStyle = 'white';
+            context.beginPath();
+            context.arc(resolution / 2, resolution / 2, resolution / 2 * 0.95, 0, Math.PI * 2, false);
+            context.closePath();
+            var gradient = context.createRadialGradient(resolution / 2, resolution / 2, 0, resolution / 2, resolution / 2, resolution / 2);
+            gradient.addColorStop(0, 'rgba( 255, 255, 255, 1)');
+            for (var t = 0, T = stops.length, step = 255 / (T + 1); t < T; ++t)
+                gradient.addColorStop(stops[t], 'rgba( %n, %n, %n, 1)'.replace(/%n/g, 255 - step * (t + 1)));
+            gradient.addColorStop(1, 'rgba( 0, 0, 0, 1 )');
+            context.fillStyle = gradient;
+            context.fill();
+            return texture;
+        };
     });
     require.define('/zones/geometry.js', function (module, exports, __dirname, __filename) {
         var triangleArea = function (a, b, c) {
@@ -117,11 +154,11 @@
         exports.factory = new SPARKLE.Factory(THREE.Color);
     });
     require.define('/emitter.js', function (module, exports, __dirname, __filename) {
-        var Material = require('/material.js', module).Material;
+        var DefaultMaterial = require('/material.js', module).Material;
         var Emitter = exports.Emitter = function (options) {
                 this.options = options = options || {};
                 var count = this.options.count != null ? this.options.count : 100;
-                var material = this.options.material ? this.options.material : new Material(count);
+                var material = this.options.material ? this.options.material : new DefaultMaterial(count, this.options.texture);
                 var geometry = new THREE.Geometry();
                 this.particleIndexPool = [];
                 for (var t = 0, T = count; t < T; ++t) {
@@ -222,38 +259,12 @@
     require.define('/material.js', function (module, exports, __dirname, __filename) {
         var vertexShaderGlsl = require('/shaders/vertex.glsl', module);
         var fragmentShaderGlsl = require('/shaders/fragment.glsl', module);
-        var texture = function (size) {
-                var canvas = document.createElement('canvas');
-                canvas.width = canvas.height = size;
-                var texture = new THREE.Texture(canvas);
-                var draw = function () {
-                    var context = canvas.getContext('2d');
-                    texture.needsUpdate = true;
-                    context.fillStyle = 'white';
-                    context.strokeStyle = 'red';
-                    context.beginPath();
-                    context.arc(64, 64, 60, 0, Math.PI * 2, false);
-                    context.closePath();
-                    context.lineWidth = 0.5;
-                    context.stroke();
-                    var gradient = context.createRadialGradient(canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2);
-                    gradient.addColorStop(0, 'rgba( 255, 255, 255, 1)');
-                    gradient.addColorStop(0.2, 'rgba( 255, 255, 255, 1)');
-                    gradient.addColorStop(0.4, 'rgba( 128, 128, 128, 1)');
-                    gradient.addColorStop(1, 'rgba( 0, 0, 0, 1 )');
-                    context.fillStyle = gradient;
-                    context.fill();
-                };
-                window.addEventListener('load', function () {
-                    draw();
-                });
-                return texture;
-            }(128);
-        var Material = exports.Material = function (count) {
+        var defaultTexture = require('/textures.js', module).gradientCircle(128);
+        var Material = exports.Material = function (count, texture) {
                 var uniforms = {
                         texture: {
                             type: 't',
-                            value: texture
+                            value: texture || defaultTexture
                         }
                     };
                 var attributes = {

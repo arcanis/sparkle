@@ -1,4 +1,4 @@
-var Material = require( 'material' ).Material;
+var DefaultMaterial = require( 'material' ).Material;
 
 var Emitter = exports.Emitter = function ( options ) {
 
@@ -8,7 +8,7 @@ var Emitter = exports.Emitter = function ( options ) {
 
     var count = this.options.count != null ? this.options.count : 100;
 
-    var material = this.options.material ? this.options.material : new Material( count );
+    var material = this.options.material ? this.options.material : new DefaultMaterial( count, this.options.texture );
     var geometry = new THREE.Geometry( );
 
     this.particleIndexPool = [ ];

@@ -5,13 +5,13 @@
 ### With Three.js
 
 ```js
-var emitter, velocity = new SPARKLE.SphereZone( 10, 10, 10 );
+var emitter;
 scene.add( emitter = new SPARKLE.THREE.Emitter( {
     count : 1000,
     lifeTime : [ 1, 1.5 ],
     fading : true,
-    color : new THREE.CuboidZone( .2, 0, 0 ),
-    velocity : velocity
+    color : new SPARKLE.CuboidZone( .2, 0, 0 ),
+    velocity : new SPARKLE.SphereZone( 10, 10, 10 )
 } ) );
 
 var render = function ( ) {
@@ -139,6 +139,18 @@ When a coordinate will have to be generated, it will be one of those points.
 Represents a Three.js geometry.
 
 The points will always be at the surface of the geometry.
+
+### Textures (Three.js only)
+
+These functions are utilitary : they allow to easily create base texture for particles.
+
+#### `SPARKLE.THREE.plainCircle( resolution )`
+
+Creates a texture with a white circle.
+
+#### `SPARKLE.THREE.gradientCircle( resolution [, stop 1 [, stop 2 [, ...]]] )`
+
+Creates a texture with a white circle and a slight fade on its borders.
 
 ## License
 
