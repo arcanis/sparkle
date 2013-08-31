@@ -57,7 +57,6 @@ var Emitter = exports.Emitter = function ( options ) {
 
     if ( this.options.lifeTime != null ) {
         this.emitter.initializer( SPARKLE.lifeTimeInitializer( this.options.lifeTime ) );
-
         this.emitter.action( SPARKLE.ageAction( this.options.eternal ) );
 
         if ( options.fading ) {
