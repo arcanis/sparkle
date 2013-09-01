@@ -133,9 +133,6 @@ Emitter.prototype.update = function ( delta, updates ) {
     if ( this.options.fading )
         this.material.attributes.aOpacity.needsUpdate = true;
 
-    if ( this.options.velocity )
-        this.geometry.verticesNeedUpdate = true;
-
     return this;
 
 };
@@ -156,6 +153,9 @@ Emitter.prototype.onWakeUp = function ( particle, delta ) {
         this.material.attributes.aColor.value[ particle.vertice ] = particle.color;
         this.material.attributes.aColor.needsUpdate = true;
     }
+
+    this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
+    this.geometry.verticesNeedUpdate = true;
 
 };
 
@@ -181,7 +181,6 @@ Emitter.prototype.onSleep = function ( particle, delta ) {
 
     var inf = Number.POSITIVE_INFINITY;
     this.geometry.vertices[ particle.vertice ].set( inf, inf, inf );
-
     this.geometry.verticesNeedUpdate = true;
 
     this.particleIndexPool.push( particle.vertice );
