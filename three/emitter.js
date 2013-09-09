@@ -34,10 +34,7 @@ var Emitter = exports.Emitter = function ( options ) {
 
     // Creating a basic emitter
 
-    var frequency = this.options.frequency != null
-        ? this.options.frequency : .1;
-
-    this.emitter = new SPARKLE.Emitter( frequency );
+    this.emitter = new SPARKLE.Emitter( this.options.frequency );
 
     // Link spark particles with Three.js ones
 
@@ -108,7 +105,11 @@ var Emitter = exports.Emitter = function ( options ) {
     // Display initial particles
 
     if ( this.options.initial != null ) {
-        this.emitter.spawn( this.options.initial[ 0 ], this.options.initial[ 1 ] );
+        if ( Array.isArray( this.options.initial ) ) {
+            this.emitter.spawn( this.options.initial[ 0 ], this.options.initial[ 1 ] );
+        } else {
+            this.emitter.spawn( this.options.initial );
+        }
     }
 
 };
@@ -177,6 +178,7 @@ Emitter.prototype.onUpdate = function ( particle, delta ) {
 
     if ( this.options.velocity ) {
         this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
+        this.geometry.verticesNeedUpdate = true;
     }
 
 };
