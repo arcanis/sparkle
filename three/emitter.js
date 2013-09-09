@@ -134,6 +134,9 @@ Emitter.prototype.update = function ( delta, updates ) {
     if ( this.options.fading )
         this.material.attributes.aOpacity.needsUpdate = true;
 
+    if ( this.options.velocity )
+        this.geometry.verticesNeedUpdate = true;
+
     return this;
 
 };
@@ -178,7 +181,6 @@ Emitter.prototype.onUpdate = function ( particle, delta ) {
 
     if ( this.options.velocity ) {
         this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
-        this.geometry.verticesNeedUpdate = true;
     }
 
 };
