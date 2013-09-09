@@ -121,7 +121,7 @@ var THREE, SPARKLE;
         eternal : true,
         fading : true,
 
-        size : 700,
+        size : 900,
         color : [ .8, .5, .1 ],
 
         position : SPARKLE.cuboidZone( 180, 0, 180, true ),
@@ -139,7 +139,7 @@ var THREE, SPARKLE;
             function ( particle ) {
                 if ( particle.velocity[ 1 ] == 0 ) {
                     var dist = Math.sqrt( Math.pow( particle.position[ 0 ], 2 ) + Math.pow( particle.position[ 2 ], 2 ) );
-                    particle.velocity[ 1 ] = Math.random( ) * beat / 10 * ( ( 282 - dist ) / 100 * 10 );
+                    particle.velocity[ 1 ] = Math.random( ) * beat / 50 * ( ( 282 - dist ) / 100 * 10 );
                 }
             }
         ]
