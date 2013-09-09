@@ -18,7 +18,7 @@ void main( void ) {
 
     vOpacity = aOpacity;
 
-    gl_PointSize = size * aSize * ( 100.0 / length( mvPosition.xyz ) );
+    gl_PointSize = size * aSize * ( 1.0 / length( mvPosition.xyz ) );
     gl_Position = projectionMatrix * mvPosition;
 
 }

@@ -137,6 +137,12 @@ Emitter.prototype.update = function ( delta, updates ) {
 
 };
 
+Emitter.prototype.delta = function ( ) {
+
+    return this.emitter.delta( );
+
+};
+
 Emitter.prototype.spawn = function ( count, randomly ) {
 
     this.emitter.spawn( count, randomly );
