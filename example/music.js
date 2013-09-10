@@ -114,21 +114,21 @@ var THREE, SPARKLE;
 
     return emitter = new SPARKLE.THREE.Emitter( {
 
-        count : 20000,
-        initial : 20000,
+        count : 10000,
+        initial : 10000,
 
         lifeTime : SPARKLE.sphereZone( 3, 3, 3 ),
         eternal : true,
         fading : true,
 
-        size : 900,
+        size : 1400,
 
         color : [ .8, .5, .1 ],
         liveColor : true,
 
         position : SPARKLE.cuboidZone( 180, 0, 180, true ),
         velocity : [ 0, 0, 0 ],
-        acceleration : [ 0, - 100, 0 ],
+        acceleration : [ 0, - 150, 0 ],
 
         actions : [
 
@@ -141,8 +141,9 @@ var THREE, SPARKLE;
 
             function ( particle ) {
                 if ( particle.velocity[ 1 ] == 0 ) {
+                    var maxDist = Math.sqrt( 180 * 180 + 180 * 180 );
                     var dist = Math.sqrt( Math.pow( particle.position[ 0 ], 2 ) + Math.pow( particle.position[ 2 ], 2 ) );
-                    particle.velocity[ 1 ] = Math.random( ) * beat / 50 * ( ( 282 - dist ) / 100 * 10 );
+                    particle.velocity[ 1 ] = Math.random( ) * beat / 50 * ( ( maxDist - dist ) / 100 * 20 );
                     particle.color.setHSL( ( 240 + ( 360 - 240 ) * beat / 120 ) / 360, 1, .5 );
                 }
             }
