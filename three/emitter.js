@@ -128,14 +128,21 @@ Emitter.prototype.update = function ( delta, updates ) {
         for ( var t = 0, T = updates.length; t < T; ++ t )
             this.material.attributes[ updates[ t ] ].needsUpdate = true;
 
-    if ( this.options.pulsing )
+    if ( this.options.liveSize || this.options.pulsing )
         this.material.attributes.aSize.needsUpdate = true;
 
-    if ( this.options.fading )
+    if ( this.options.liveOpacity || this.options.fading )
         this.material.attributes.aOpacity.needsUpdate = true;
+
+    if ( this.options.liveColor )
+        this.material.attributes.aColor.needsUpdate = true;
 
     if ( this.options.velocity )
         this.geometry.verticesNeedUpdate = true;
+
+    if ( this.options.postFrame ) {
+        this.options.postFrame.call( this, delta );
+    }
 
     return this;
 
@@ -167,20 +174,31 @@ Emitter.prototype.onWakeUp = function ( particle, delta ) {
     this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
     this.geometry.verticesNeedUpdate = true;
 
+    if ( this.options.postWakeUp ) {
+        this.options.postWakeUp.call( this, particle, delta );
+    }
+
 };
 
 Emitter.prototype.onUpdate = function ( particle, delta ) {
 
     if ( particle.vertice == null ) return ;
 
-    if ( this.options.pulsing )
+    if ( this.options.liveSize || this.options.pulsing )
         this.material.attributes.aSize.value[ particle.vertice ] = particle.size;
 
-    if ( this.options.fading )
+    if ( this.options.liveOpacity || this.options.fading )
         this.material.attributes.aOpacity.value[ particle.vertice ] = particle.opacity;
+
+    if ( this.options.liveColor )
+        this.material.attributes.aColor.value[ particle.vertice ] = particle.color;
 
     if ( this.options.velocity ) {
         this.geometry.vertices[ particle.vertice ].fromArray( particle.position );
+    }
+
+    if ( this.options.postUpdate ) {
+        this.options.postUpdate.call( this, particle, delta );
     }
 
 };
@@ -194,5 +212,9 @@ Emitter.prototype.onSleep = function ( particle, delta ) {
     this.geometry.verticesNeedUpdate = true;
 
     this.particleIndexPool.push( particle.vertice );
+
+    if ( this.options.postSleep ) {
+        this.options.postSleep.call( this, particle, delta );
+    }
 
 };
