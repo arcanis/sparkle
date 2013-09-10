@@ -103,14 +103,34 @@ var THREE, SPARKLE;
     javascriptNode.connect( audio.destination );
     inputNode.connect( audio.destination );
 
+    var play = function ( buffer ) {
+        inputNode.buffer = buffer;
+        inputNode.noteOn( 0 ); };
+
+    var decode = function ( buffer ) {
+        audio.decodeAudioData( buffer, function ( buffer ) {
+            play( buffer ); } ); };
+
     var xhr = new XMLHttpRequest( );
     xhr.open( 'GET', 'assets/clozee-colossal.mp3', true );
     xhr.responseType = 'arraybuffer';
     xhr.onload = function ( ) {
-        audio.decodeAudioData( xhr.response, function ( buffer ) {
-            inputNode.buffer = buffer;
-            inputNode.noteOn( 0 ); } ); };
+        decode( xhr.response ); };
     xhr.send( null );
+
+    window.addEventListener( 'dragover', function ( e ) {
+        e.preventDefault( );
+        e.dataTransfer.dropEffect = 'copy';
+    } );
+
+    window.addEventListener( 'drop', function ( e ) {
+        e.preventDefault( );
+        var files = e.dataTransfer.files;
+        var reader = new FileReader( );
+        reader.onload = function ( ) {
+            decode( reader.result ); };
+        reader.readAsArrayBuffer( files[ 0 ] );
+    } );
 
     return emitter = new SPARKLE.THREE.Emitter( {
 
