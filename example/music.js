@@ -128,7 +128,7 @@ var THREE, SPARKLE;
 
         position : SPARKLE.cuboidZone( 180, 0, 180, true ),
         velocity : [ 0, 0, 0 ],
-        acceleration : [ 0, - 150, 0 ],
+        acceleration : [ 0, - 200, 0 ],
 
         actions : [
 
@@ -141,10 +141,18 @@ var THREE, SPARKLE;
 
             function ( particle ) {
                 if ( particle.velocity[ 1 ] == 0 ) {
+
                     var maxDist = Math.sqrt( 180 * 180 + 180 * 180 );
                     var dist = Math.sqrt( Math.pow( particle.position[ 0 ], 2 ) + Math.pow( particle.position[ 2 ], 2 ) );
-                    particle.velocity[ 1 ] = Math.random( ) * beat / 50 * ( ( maxDist - dist ) / 100 * 20 );
+
+                    var beatFactor = 12 * beat / 140;
+                    var distFactor = 20 * ( maxDist - dist ) / maxDist;
+
+                    particle.gravity = 200;
+                    particle.velocity[ 1 ] = beatFactor * distFactor;
+
                     particle.color.setHSL( ( 240 + ( 360 - 240 ) * beat / 120 ) / 360, 1, .5 );
+
                 }
             }
 
